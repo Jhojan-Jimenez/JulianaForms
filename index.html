@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crea tu Plan de Entrenamiento</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-purple: #6b46c1;
+        --dark-purple: #4a2c8c;
+        --light-purple: #8e6cef;
+        --secondary-fuchsia: #ec4899;
+        --light-fuchsia: #fbcfe8;
+        --text-dark: #333;
+        --text-light: #f9f9f9;
+        --bg-light: #f9f9f9;
+        --bg-dark: #1a1a2e;
+        --border-color: #ddd;
+        --error-red: #ef4444;
+        --success-green: #22c55e;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-purple) 0%,
+          var(--dark-purple) 100%
+        );
+        color: var(--text-dark);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+        overflow-x: hidden;
+      }
+
+      .container {
+        background-color: var(--bg-light);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        padding: 40px;
+        max-width: 700px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      h1 {
+        color: var(--primary-purple);
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      p.subtitle {
+        color: #666;
+        font-size: 1.1em;
+        margin-bottom: 30px;
+        line-height: 1.5;
+      }
+
+      .form-section {
+        display: none;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        padding: 20px 0;
+      }
+
+      .form-section.active {
+        display: block;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .form-section.leaving {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+        text-align: left;
+        position: relative;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark-purple);
+        font-size: 1em;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="tel"],
+      textarea {
+        width: calc(100% - 20px);
+        padding: 12px 10px;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 1em;
+        color: var(--text-dark);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="tel"]:focus,
+      textarea:focus {
+        border-color: var(--light-purple);
+        box-shadow: 0 0 0 3px rgba(142, 108, 239, 0.3);
+        outline: none;
+      }
+
+      input.invalid,
+      textarea.invalid {
+        border-color: var(--error-red);
+      }
+
+      .error-message {
+        color: var(--error-red);
+        font-size: 0.85em;
+        margin-top: 5px;
+        display: none;
+      }
+
+      input.invalid + .error-message,
+      textarea.invalid + .error-message {
+        display: block;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 20px;
+        margin-top: 10px;
+        justify-content: center;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--dark-purple);
+        position: relative;
+      }
+
+      .radio-custom {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--primary-purple);
+        border-radius: 50%;
+        display: inline-block;
+        position: relative;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .radio-option input[type="radio"]:checked + .radio-custom {
+        background-color: var(--secondary-fuchsia);
+        border-color: var(--secondary-fuchsia);
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.3);
+      }
+
+      .radio-option input[type="radio"]:checked + .radio-custom::after {
+        content: "";
+        width: 12px;
+        height: 12px;
+        background-color: var(--bg-light);
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: bounce 0.3s ease-out;
+      }
+
+      @keyframes bounce {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+        }
+        70% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      .conditional-fields {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height 0.7s ease-out, opacity 0.7s ease-out;
+      }
+
+      .conditional-fields.show {
+        max-height: 200px; /* Adjust based on content */
+        opacity: 1;
+      }
+
+      .button-group {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+      }
+
+      button {
+        padding: 14px 25px;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex-grow: 1;
+      }
+
+      button.primary {
+        background-color: var(--primary-purple);
+        color: var(--text-light);
+        box-shadow: 0 5px 15px rgba(107, 70, 193, 0.3);
+      }
+
+      button.primary:hover {
+        background-color: var(--light-purple);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(107, 70, 193, 0.4);
+      }
+
+      button.primary:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 10px rgba(107, 70, 193, 0.2);
+      }
+
+      button.secondary {
+        background-color: #eee;
+        color: var(--primary-purple);
+        border: 2px solid var(--primary-purple);
+      }
+
+      button.secondary:hover {
+        background-color: var(--light-fuchsia);
+        color: var(--secondary-fuchsia);
+        border-color: var(--secondary-fuchsia);
+        transform: translateY(-3px);
+      }
+
+      button.secondary:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        height: 10px;
+        margin-top: 30px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background-color: var(--secondary-fuchsia);
+        border-radius: 10px;
+        transition: width 0.5s ease-in-out;
+      }
+
+      .success-message {
+        display: none;
+        padding: 30px;
+        background-color: var(--success-green);
+        color: var(--text-light);
+        border-radius: 15px;
+        margin-top: 30px;
+        font-size: 1.2em;
+        font-weight: 600;
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 30px 20px;
+          margin: 10px;
+        }
+
+        h1 {
+          font-size: 2em;
+        }
+
+        p.subtitle {
+          font-size: 1em;
+        }
+
+        .button-group {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 10px;
+        }
+
+        .container {
+          padding: 20px 15px;
+        }
+
+        h1 {
+          font-size: 1.8em;
+        }
+
+        p.subtitle {
+          font-size: 0.9em;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"],
+        textarea {
+          padding: 10px;
+          font-size: 0.95em;
+        }
+
+        button {
+          padding: 12px 20px;
+          font-size: 1em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>¡Crea tu Plan de Entrenamiento!</h1>
+      <p class="subtitle">
+        Cuéntanos un poco sobre ti para personalizar tu rutina.
+      </p>
+
+      <form id="trainingForm">
+        <!-- Sección 1: Datos Personales -->
+        <div class="form-section active" data-step="1">
+          <div class="form-group">
+            <label for="fullName">Nombre Completo:</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              placeholder="Tu nombre y apellido"
+              required
+              minlength="3"
+            />
+            <span class="error-message"
+              >Por favor, ingresa tu nombre completo (mínimo 3
+              caracteres).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="age">Edad:</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              placeholder="Ej: 25"
+              required
+              min="1"
+            />
+            <span class="error-message"
+              >Por favor, ingresa una edad válida (número entero
+              positivo).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="height">Altura (cm):</label>
+            <input
+              type="number"
+              id="height"
+              name="height"
+              placeholder="Ej: 175"
+              required
+              min="1"
+            />
+            <span class="error-message"
+              >Por favor, ingresa tu altura en cm (número entero
+              positivo).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="weight">Peso (kg):</label>
+            <input
+              type="number"
+              id="weight"
+              name="weight"
+              placeholder="Ej: 70.5"
+              required
+              min="0.1"
+              step="0.1"
+            />
+            <span class="error-message"
+              >Por favor, ingresa tu peso en kg (número decimal positivo).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="phone">Teléfono:</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              placeholder="Ej: +5491112345678"
+              required
+              pattern="^\+?[0-9\s\-()]{7,20}$"
+            />
+            <span class="error-message"
+              >Por favor, ingresa un número de teléfono válido.</span
+            >
+          </div>
+          <div class="button-group">
+            <button type="button" class="primary" onclick="nextStep()">
+              Siguiente
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección 2: Actividad Física Actual -->
+        <div class="form-section" data-step="2">
+          <div class="form-group">
+            <label>¿Realizas actividad física actualmente?</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="currentActivity"
+                  value="yes"
+                  onchange="toggleConditionalFields('currentActivity', 'currentActivityFields')"
+                />
+                Sí
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="currentActivity"
+                  value="no"
+                  onchange="toggleConditionalFields('currentActivity', 'currentActivityFields')"
+                />
+                No
+              </label>
+            </div>
+            <span class="error-message">Por favor, selecciona una opción.</span>
+          </div>
+          <div id="currentActivityFields" class="conditional-fields">
+            <div class="form-group">
+              <label for="activityType">¿Qué tipo de actividad?</label>
+              <input
+                type="text"
+                id="activityType"
+                name="activityType"
+                placeholder="Ej: Correr, Yoga, Pesas"
+              />
+              <span class="error-message"
+                >Por favor, especifica el tipo de actividad.</span
+              >
+            </div>
+            <div class="form-group">
+              <label for="activityMonths">¿Hace cuántos meses?</label>
+              <input
+                type="number"
+                id="activityMonths"
+                name="activityMonths"
+                placeholder="Ej: 6"
+                min="1"
+              />
+              <span class="error-message"
+                >Por favor, ingresa un número de meses válido (entero
+                positivo).</span
+              >
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="button" class="secondary" onclick="prevStep()">
+              Anterior
+            </button>
+            <button type="button" class="primary" onclick="nextStep()">
+              Siguiente
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección 3: Hábitos y Estilo de Vida -->
+        <div class="form-section" data-step="3">
+          <div class="form-group">
+            <label>¿Tienes alguna condición médica o lesión relevante?</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="medicalCondition"
+                  value="yes"
+                  onchange="toggleConditionalFields('medicalCondition', 'medicalConditionFields')"
+                />
+                Sí
+              </label>
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="medicalCondition"
+                  value="no"
+                  onchange="toggleConditionalFields('medicalCondition', 'medicalConditionFields')"
+                />
+                No
+              </label>
+            </div>
+            <span class="error-message">Por favor, selecciona una opción.</span>
+          </div>
+          <div id="medicalConditionFields" class="conditional-fields">
+            <div class="form-group">
+              <label for="conditionType">¿Qué tipo de condición?</label>
+              <input
+                type="text"
+                id="conditionType"
+                name="conditionType"
+                placeholder="Ej: Diabetes, Lesión de rodilla"
+              />
+              <span class="error-message"
+                >Por favor, especifica la condición.</span
+              >
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="sleepHours">Horas de sueño diarias en promedio:</label>
+            <input
+              type="number"
+              id="sleepHours"
+              name="sleepHours"
+              placeholder="Ej: 7.5"
+              required
+              min="1"
+              max="12"
+              step="0.1"
+            />
+            <span class="error-message"
+              >Por favor, ingresa un número de horas de sueño válido (entre 1 y
+              12).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="mealsPerDay">Número de comidas diarias:</label>
+            <input
+              type="number"
+              id="mealsPerDay"
+              name="mealsPerDay"
+              placeholder="Ej: 3"
+              required
+              min="1"
+            />
+            <span class="error-message"
+              >Por favor, ingresa un número de comidas válido (entero
+              positivo).</span
+            >
+          </div>
+          <div class="button-group">
+            <button type="button" class="secondary" onclick="prevStep()">
+              Anterior
+            </button>
+            <button type="button" class="primary" onclick="nextStep()">
+              Siguiente
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección 4: Objetivos de Entrenamiento -->
+        <div class="form-section" data-step="4">
+          <div class="form-group">
+            <label for="goals"
+              >¿Qué quieres lograr con este plan de entrenamiento?</label
+            >
+            <textarea
+              id="goals"
+              name="goals"
+              rows="4"
+              placeholder="Ej: Aumentar masa muscular en piernas y disminuir grasa en brazos y abdomen"
+              required
+              minlength="10"
+            ></textarea>
+            <span class="error-message"
+              >Por favor, describe tus objetivos (mínimo 10 caracteres).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="timeframe">¿En cuánto tiempo?</label>
+            <input
+              type="text"
+              id="timeframe"
+              name="timeframe"
+              placeholder="Ej: 3 meses, 6 semanas"
+              required
+              minlength="3"
+            />
+            <span class="error-message"
+              >Por favor, especifica el plazo (mínimo 3 caracteres).</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="availability">Disponibilidad horaria:</label>
+            <textarea
+              id="availability"
+              name="availability"
+              rows="3"
+              placeholder="Ej: Lunes, Miércoles, Viernes de 18:00 a 19:00"
+              required
+              minlength="10"
+            ></textarea>
+            <span class="error-message"
+              >Por favor, describe tu disponibilidad horaria (mínimo 10
+              caracteres).</span
+            >
+          </div>
+          <div class="button-group">
+            <button type="button" class="secondary" onclick="prevStep()">
+              Anterior
+            </button>
+            <button type="submit" class="primary">Crear Plan</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div id="successMessage" class="success-message">
+        ¡Felicidades! Tu plan de entrenamiento personalizado está en camino.
+        ¡Pronto recibirás más detalles!
+      </div>
+    </div>
+
+    <script>
+      let currentStep = 1;
+      const totalSteps = 4;
+      const form = document.getElementById("trainingForm");
+      const progressBar = document.getElementById("progressBar");
+      const successMessage = document.getElementById("successMessage");
+
+      document.addEventListener("DOMContentLoaded", () => {
+        showStep(currentStep);
+        updateProgressBar();
+        form.addEventListener("input", (event) => {
+          validateField(event.target);
+        });
+      });
+
+      function showStep(step) {
+        const sections = document.querySelectorAll(".form-section");
+        sections.forEach((section) => {
+          if (parseInt(section.dataset.step) === step) {
+            section.classList.remove("leaving");
+            section.classList.add("active");
+          } else {
+            section.classList.remove("active");
+          }
+        });
+        updateProgressBar();
+      }
+
+      function nextStep() {
+        if (validateCurrentStep()) {
+          const currentSection = document.querySelector(
+            `.form-section[data-step="${currentStep}"]`
+          );
+          currentSection.classList.add("leaving"); // Start leaving animation
+
+          setTimeout(() => {
+            currentSection.classList.remove("active", "leaving"); // Remove active and leaving after animation
+            currentStep++;
+            if (currentStep <= totalSteps) {
+              showStep(currentStep);
+            }
+          }, 500); // Match CSS transition duration
+        }
+      }
+
+      function prevStep() {
+        const currentSection = document.querySelector(
+          `.form-section[data-step="${currentStep}"]`
+        );
+        currentSection.classList.add("leaving-reverse"); // Custom class for reverse animation
+
+        setTimeout(() => {
+          currentSection.classList.remove("active", "leaving-reverse");
+          currentStep--;
+          if (currentStep >= 1) {
+            showStep(currentStep);
+          }
+        }, 500); // Match CSS transition duration
+      }
+
+      function updateProgressBar() {
+        const progress = (currentStep / totalSteps) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+
+      function validateField(field) {
+        let isValid = true;
+        const errorMessage = field.nextElementSibling; // Assumes error message is immediately after input/textarea
+
+        if (field.hasAttribute("required") && field.value.trim() === "") {
+          isValid = false;
+        } else if (field.type === "number") {
+          const value = parseFloat(field.value);
+          if (isNaN(value) || value <= 0) {
+            isValid = false;
+          } else if (
+            field.hasAttribute("min") &&
+            value < parseFloat(field.min)
+          ) {
+            isValid = false;
+          } else if (
+            field.hasAttribute("max") &&
+            value > parseFloat(field.max)
+          ) {
+            isValid = false;
+          } else if (field.step === "1" && !Number.isInteger(value)) {
+            // For integer validation
+            isValid = false;
+          }
+        } else if (field.type === "tel") {
+          const pattern = new RegExp(field.pattern);
+          if (!pattern.test(field.value)) {
+            isValid = false;
+          }
+        } else if (field.tagName === "TEXTAREA" || field.type === "text") {
+          if (
+            field.hasAttribute("minlength") &&
+            field.value.trim().length < parseInt(field.minlength)
+          ) {
+            isValid = false;
+          }
+        }
+
+        // Conditional fields validation
+        if (
+          field.closest(".conditional-fields") &&
+          !field.closest(".conditional-fields").classList.contains("show")
+        ) {
+          isValid = true; // If conditional fields are hidden, they are not required for validation
+        } else if (
+          field.closest(".conditional-fields") &&
+          field.hasAttribute("required") &&
+          field.value.trim() === ""
+        ) {
+          isValid = false;
+        }
+
+        if (!isValid) {
+          field.classList.add("invalid");
+          if (errorMessage) errorMessage.style.display = "block";
+        } else {
+          field.classList.remove("invalid");
+          if (errorMessage) errorMessage.style.display = "none";
+        }
+        return isValid;
+      }
+
+      function validateCurrentStep() {
+        let isValid = true;
+        const currentSection = document.querySelector(
+          `.form-section[data-step="${currentStep}"]`
+        );
+        const fields = currentSection.querySelectorAll(
+          'input[required], textarea[required], input[type="number"], input[type="tel"], input[type="text"], textarea'
+        );
+        const radioGroups = currentSection.querySelectorAll(".radio-group");
+
+        fields.forEach((field) => {
+          if (!validateField(field)) {
+            isValid = false;
+          }
+        });
+
+        radioGroups.forEach((group) => {
+          const radioName = group.querySelector('input[type="radio"]').name;
+          const selectedRadio = document.querySelector(
+            `input[name="${radioName}"]:checked`
+          );
+          const errorMessage = group.nextElementSibling;
+
+          if (!selectedRadio) {
+            isValid = false;
+            if (
+              errorMessage &&
+              errorMessage.classList.contains("error-message")
+            ) {
+              errorMessage.style.display = "block";
+            }
+          } else {
+            if (
+              errorMessage &&
+              errorMessage.classList.contains("error-message")
+            ) {
+              errorMessage.style.display = "none";
+            }
+          }
+        });
+
+        return isValid;
+      }
+
+      function toggleConditionalFields(radioName, fieldsId) {
+        const selectedValue = document.querySelector(
+          `input[name="${radioName}"]:checked`
+        )?.value;
+        const conditionalFields = document.getElementById(fieldsId);
+        const inputs = conditionalFields.querySelectorAll("input, textarea");
+
+        if (selectedValue === "yes") {
+          conditionalFields.classList.add("show");
+          inputs.forEach((input) => input.setAttribute("required", "true"));
+        } else {
+          conditionalFields.classList.remove("show");
+          inputs.forEach((input) => {
+            input.removeAttribute("required");
+            input.classList.remove("invalid");
+            if (
+              input.nextElementSibling &&
+              input.nextElementSibling.classList.contains("error-message")
+            ) {
+              input.nextElementSibling.style.display = "none";
+            }
+          });
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (validateCurrentStep()) {
+          // Simulate form submission
+          form.style.display = "none";
+          progressBar.style.display = "none";
+          successMessage.style.display = "block";
+
+          // In a real application, you would send the data to a server here
+          const formData = new FormData(form);
+          const data = {};
+          for (let [key, value] of formData.entries()) {
+            data[key] = value;
+          }
+          console.log("Formulario enviado:", data);
+        } else {
+          alert(
+            "Por favor, completa todos los campos requeridos y corrige los errores."
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
