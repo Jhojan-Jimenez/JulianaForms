@@ -881,6 +881,18 @@
           for (let [key, value] of formData.entries()) {
             data[key] = value;
           }
+          const fetchN8N = async () => {
+            await fetch(
+              "https://n8n-production-8bb7.up.railway.app/webhook/c7c0bdec-0faa-4343-9536-d6d986151a03",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              }
+            );
+            console.log("Ya se ha enviado la solicitud a n8n");
+          };
+          fetchN8N();
           console.log("Formulario enviado:", data);
         } else {
           alert(
