@@ -438,20 +438,7 @@
               >Por favor, ingresa tu peso en kg (número decimal positivo).</span
             >
           </div>
-          <div class="form-group">
-            <label for="phone">Teléfono:</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              placeholder="Ej: +5491112345678"
-              required
-              pattern="^\+?[0-9\s\-()]{7,20}$"
-            />
-            <span class="error-message"
-              >Por favor, ingresa un número de teléfono válido.</span
-            >
-          </div>
+
           <div class="button-group">
             <button type="button" class="primary" onclick="nextStep()">
               Siguiente
@@ -867,43 +854,85 @@
         }
       }
 
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        if (validateCurrentStep()) {
-          form.style.display = "none";
-          progressBar.style.display = "none";
-          successMessage.style.display = "block";
+      // Problema en iPhone/Safari:
+      // 1. Safari (especialmente en iOS) tiene restricciones con fetch y CORS, y a veces no soporta bien await en funciones anónimas dentro de eventos.
+      // 2. El form.style.display = "none" puede causar que el FormData no se lea correctamente en algunos navegadores si el DOM cambia antes de leer los datos.
+      // 3. Safari puede requerir que el event handler sea async si se usa await, o que el fetch esté fuera del handler.
+      // 4. Safari puede bloquear fetch si la URL no es HTTPS o si hay problemas de CORS.
 
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        if (validateCurrentStep()) {
+          // Primero recolectar los datos ANTES de ocultar el form
           const formData = new FormData(form);
           const data = {};
           for (let [key, value] of formData.entries()) {
             data[key] = value;
           }
+          console.log(data);
 
-          const fetchN8N = async () => {
-            try {
-              console.log("Enviando datos a n8n:", data);
-              const response = await fetch(
+          // Ahora ocultar el form y mostrar mensaje
+          form.style.display = "none";
+          progressBar.style.display = "none";
+          successMessage.style.display = "block";
+
+          // Usar XMLHttpRequest como fallback para mejor compatibilidad
+          function sendDataToN8N(payload) {
+            // Preferir fetch si está disponible y soportado
+            if (window.fetch) {
+              fetch(
                 "https://n8n-production-8bb7.up.railway.app/webhook/c7c0bdec-0faa-4343-9536-d6d986151a03",
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(data),
+                  body: JSON.stringify(payload),
                 }
+              )
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                  }
+                  return response.text();
+                })
+                .then((text) => {
+                  console.log("Respuesta de n8n:", text);
+                  alert("Formulario enviado correctamente.");
+                })
+                .catch((error) => {
+                  console.error("Error al enviar a n8n:", error);
+                  alert(
+                    "Error al enviar el formulario. Por favor, inténtalo más tarde."
+                  );
+                });
+            } else {
+              // Fallback para navegadores antiguos
+              var xhr = new XMLHttpRequest();
+              xhr.open(
+                "POST",
+                "https://n8n-production-8bb7.up.railway.app/webhook/c7c0bdec-0faa-4343-9536-d6d986151a03"
               );
-              if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-              }
-              console.log("Respuesta de n8n:", await response.text());
-              alert("Formulario enviado correctamente.");
-            } catch (error) {
-              console.error("Error al enviar a n8n:", error);
-              alert(
-                "Error al enviar el formulario. Por favor, inténtalo más tarde."
-              );
+              xhr.setRequestHeader("Content-Type", "application/json");
+              xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  console.log("Respuesta de n8n:", xhr.responseText);
+                  alert("Formulario enviado correctamente.");
+                } else {
+                  alert(
+                    "Error al enviar el formulario. Por favor, inténtalo más tarde."
+                  );
+                }
+              };
+              xhr.onerror = function () {
+                alert(
+                  "Error al enviar el formulario. Por favor, inténtalo más tarde."
+                );
+              };
+              xhr.send(JSON.stringify(payload));
             }
-          };
-          fetchN8N();
+          }
+
+          sendDataToN8N(data);
         } else {
           alert(
             "Por favor, completa todos los campos requeridos y corrige los errores."
